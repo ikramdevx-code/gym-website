@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../assets/images/logo.png';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,6 +17,21 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const loggedInUser = localStorage.getItem('loggedInUser');
+    if (loggedInUser) {
+      setUser(JSON.parse(loggedInUser));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('loggedInUser');
+    localStorage.removeItem('rememberMe');
+    setUser(null);
+    navigate('/login');
+  };
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
@@ -83,22 +100,49 @@ const Navbar = () => {
             ))}
           </motion.div>
 
-          {/* Sign Up Button - Desktop */}
+          {/* Auth Buttons - Desktop */}
           <motion.div 
-            className="hidden lg:block"
+            className="hidden lg:flex items-center gap-3"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
-            <Link to="/signup">
-              <motion.button 
-                className="bg-primary hover:bg-orange-600 text-white px-6 xl:px-8 py-2.5 xl:py-3 rounded-full font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl"
-                whileHover={{ scale: 1.05, boxShadow: '0 20px 25px -5px rgba(255, 107, 53, 0.3)' }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Sign up
-              </motion.button>
-            </Link>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <span className="text-white text-sm font-medium">
+                  Welcome, {user.fullName || user.email}
+                </span>
+                <motion.button 
+                  onClick={handleLogout}
+                  className="bg-red-500 hover:bg-red-600 text-white px-6 xl:px-8 py-2.5 xl:py-3 rounded-full font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl"
+                  whileHover={{ scale: 1.05, boxShadow: '0 20px 25px -5px rgba(239, 68, 68, 0.3)' }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Logout
+                </motion.button>
+              </div>
+            ) : (
+              <>
+                <Link to="/login">
+                  <motion.button 
+                    className="bg-transparent border border-primary text-primary hover:bg-primary hover:text-white px-6 xl:px-8 py-2.5 xl:py-3 rounded-full font-semibold text-sm transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Login
+                  </motion.button>
+                </Link>
+                <Link to="/signup">
+                  <motion.button 
+                    className="bg-primary hover:bg-orange-600 text-white px-6 xl:px-8 py-2.5 xl:py-3 rounded-full font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl"
+                    whileHover={{ scale: 1.05, boxShadow: '0 20px 25px -5px rgba(255, 107, 53, 0.3)' }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Sign up
+                  </motion.button>
+                </Link>
+              </>
+            )}
           </motion.div>
 
           {/* Mobile Menu Button */}
@@ -154,17 +198,48 @@ const Navbar = () => {
                     {item.name}
                   </motion.button>
                 ))}
-                <Link to="/signup" className="block">
-                  <motion.button 
-                    className="w-full bg-primary hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 mt-2"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: navItems.length * 0.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Sign up
-                  </motion.button>
-                </Link>
+                {user ? (
+                  <div className="space-y-2 mt-2">
+                    <div className="px-4 py-2 text-white text-sm font-medium">
+                      Welcome, {user.fullName || user.email}
+                    </div>
+                    <motion.button 
+                      onClick={handleLogout}
+                      className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: navItems.length * 0.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Logout
+                    </motion.button>
+                  </div>
+                ) : (
+                  <div className="space-y-2 mt-2">
+                    <Link to="/login" className="block">
+                      <motion.button 
+                        className="w-full bg-transparent border border-primary text-primary hover:bg-primary hover:text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: navItems.length * 0.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Login
+                      </motion.button>
+                    </Link>
+                    <Link to="/signup" className="block">
+                      <motion.button 
+                        className="w-full bg-primary hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: (navItems.length + 1) * 0.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Sign up
+                      </motion.button>
+                    </Link>
+                  </div>
+                )}
               </motion.div>
             </motion.div>
           )}
